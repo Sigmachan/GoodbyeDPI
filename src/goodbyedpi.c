@@ -23,9 +23,6 @@ WINSOCK_API_LINKAGE INT WSAAPI inet_pton(INT Family, LPCSTR pStringBuf, PVOID pA
 
 #define die() do { sleep(20); exit(EXIT_FAILURE); } while (0)
 
-#define MAX_FILTERS 4
-#define MAX_PACKET_SIZE 9016
-
 #define DIVERT_NO_LOCALNETSv4_DST "(" \
                    "(ip.DstAddr < 127.0.0.1 or ip.DstAddr > 127.255.255.255) and " \
                    "(ip.DstAddr < 10.0.0.0 or ip.DstAddr > 10.255.255.255) and " \
@@ -764,7 +761,7 @@ int main(int argc, char *argv[]) {
                                 );
 
                             WinDivertHelperCalcChecksums(
-                                packet, packetLen - packet_dataLen + http_fragment_size, 0
+                                packet, packetLen - packet_dataLen + http_fragment_size, &addr, 0
                             );
                             WinDivertSend(
                                 w_filter, packet,
@@ -968,13 +965,7 @@ int main(int argc, char *argv[]) {
 
             if (should_reinject) {
                 //printf("Re-injecting!\n");
-                if (should_recalc_checksum) {
-                    WinDivertHelperCalcChecksums(packet, packetLen, 0);
-                }
-                else {
-                    WinDivertHelperCalcChecksums(packet, packetLen,
-                                                 WINDIVERT_HELPER_NO_REPLACE);
-                }
+                WinDivertHelperCalcChecksums(packet, packetLen, &addr, 0);
                 WinDivertSend(w_filter, packet, packetLen, &addr, NULL);
             }
         }
